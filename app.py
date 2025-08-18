@@ -1,5 +1,5 @@
 import streamlit as st
-import fitz  # PyMuPDF
+import fitz  
 from summary_utils import (
     setup_gemini, summarize_with_gemini,
     check_relevance_with_gemini,
