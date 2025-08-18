@@ -1,8 +1,7 @@
 fitz==0.0.1.dev2
 streamlit==1.48.0
 chromadb==1.0.19
-google-generativeai==0.8.3
-google-ai-generativelanguage==0.6.6
-protobuf==4.25.3
 fpdf2==2.8.4
-
+google-generativeai==0.8.3
+google-ai-generativelanguage==0.6.10
+protobuf==4.25.3
