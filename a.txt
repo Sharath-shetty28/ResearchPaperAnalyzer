@@ -1,0 +1,64 @@
+# app.py
+import streamlit as st
+import fitz  # PyMuPDF
+import google.generativeai as genai
+import os
+from dotenv import load_dotenv
+from summary_utils import setup_gemini, summarize_with_gemini
+
+load_dotenv()
+genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
+
+st.set_page_config(page_title="Multi-PDF Summarizer", layout="wide")
+st.title("📄 Multi-PDF Summarizer using Gemini")
+
+uploaded_files = st.file_uploader("Upload multiple PDF files", type="pdf", accept_multiple_files=True)
+
+def extract_text_from_pdf(file):
+    doc = fitz.open(stream=file.read(), filetype="pdf")
+    text = ""
+    for page in doc:
+        text += page.get_text()
+    return text
+
+# def summarize_with_gemini(text):
+#     model = genai.GenerativeModel('gemini-2.5-flash')
+#     prompt = f"Summarize the following academic paper:\n\n{text[:15000]}"
+#     response = model.generate_content(prompt)
+#     return response.text
+
+if uploaded_files:
+    for pdf in uploaded_files:
+        st.subheader(f"📘 {pdf.name}")
+        with st.spinner("Extracting & Summarizing..."):
+            pdf_text = extract_text_from_pdf(pdf)
+            st.markdown(pdf_text)
+            # summary = summarize_with_gemini(pdf_text)
+            # st.markdown(summary)
+
+
+for file in uploaded_files:
+                text = extract_text_from_pdf(file)
+                with st.spinner(f"Summarizing {file.name}..."):
+                    summary = summarize_with_gemini(text)
+                with st.spinner("Checking relevance..."):
+                    if st.session_state.get("topic_query"):
+                        relevance = check_relevance_with_gemini(text, st.session_state["topic_query"])
+                    else:
+                        relevance = "Not provided."
+
+                pdf.add_pdf_summary(file.name, summary, relevance)
+
+            # Add RAG answer if exists
+            if st.session_state.get("last_question") and st.session_state.get("last_answer"):
+                pdf.add_page()
+                pdf.add_chat_answer(
+                    st.session_state["last_question"],
+                    st.session_state["last_answer"]
+                )
+
+            export_path = "summary_report.pdf"
+            pdf.save(export_path)
+            with open(export_path, "rb") as f:
+                st.download_button("📥 Download Report", f, file_name="summary_report.pdf", mime="application/pdf")
+
