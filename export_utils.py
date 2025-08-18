@@ -1,8 +1,6 @@
 import re
 from fpdf import FPDF
 
-import re
-from io import BytesIO
 
 def clean_text(text: str) -> str:
     if not text:
