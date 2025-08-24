@@ -3,6 +3,8 @@
 ResearchPaperAnalyzer is a **Python + Streamlit** application that helps users analyze research papers with ease.  
 It allows you to **upload PDFs**, generate **summaries** (Short / Medium / Long), extract **relevant tags**, check **alignment scores** (0–10) against your chosen topic/domain, and finally **download a PDF report**.
 
+
+## Live demo : nexaread.streamlit.app
 ---
 
 ## 🚀 Features
