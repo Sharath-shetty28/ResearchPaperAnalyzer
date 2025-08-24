@@ -69,10 +69,10 @@ http://localhost:8501
 
 ## 📊 Example Output
 
--Summary (short/medium/long)
--Tags: e.g., ["Neural Networks", "Graph Models", "Recommendation"]
--Relevance Score: 8.5 / 10
--Generated Report: Downloadable .pdf
+- Summary (short/medium/long)
+- Tags: e.g., ["Neural Networks", "Graph Models", "Recommendation"]
+- Relevance Score: 8.5 / 10
+- Generated Report: Downloadable .pdf
 
 
 
