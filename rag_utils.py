@@ -18,8 +18,6 @@ def get_user_collection(user_id):
 # Example: get a collection for current user
 collection = get_user_collection(user_id="user123")
 
-# client.delete_collection(f"research_papers_{user_id}")
-
 
 # ===== TEXT CHUNKER =====
 def chunk_text(text, chunk_size=800, overlap=100):
@@ -79,34 +77,6 @@ def add_pdf_to_chromadb(text, source_name):
         print(f"❌ Error adding PDF to ChromaDB: {e}")
 
 
-# ===== SEARCH CHROMADB (Unique Results + Fallbacks) =====
-# def query_chromadb(question, top_k=5):
-#     try:
-#         results = collection.query(query_texts=[question], n_results=top_k *3)
-#     except Exception as e:
-#         print(f"❌ ChromaDB query error: {e}")
-#         return []
-
-#     # Gracefully handle missing or empty results
-#     if not results or "documents" not in results or not results["documents"]:
-#         print("⚠️ No results found.")
-#         return []
-
-#     docs = results.get("documents", [[]])[0]
-#     metas = results.get("metadatas", [[]])[0]
-
-#     # Deduplicate by content + source + chunk_id
-#     seen = set()
-#     unique_results = []
-#     for doc, meta in zip(docs, metas):
-#         if not doc or not meta:
-#             continue
-#         key = (doc.strip(), meta.get("source", ""), meta.get("chunk_id", ""))
-#         if key not in seen:
-#             seen.add(key)
-#             unique_results.append((doc.strip(), meta))
-
-#     return unique_results
 
 def query_chromadb(question, top_k=5):
     results = collection.query(query_texts=[question], n_results=top_k * 3)  
