@@ -8,27 +8,6 @@ def setup_gemini(api_key):
     genai.configure(api_key=api_key)
 
 
-def summarize_with_gemini(
-    text, 
-    model_name="models/gemini-2.5-flash",
-    length="medium"  # "short", "medium", "detailed"
-):
-
- # Adjust prompt based on length
-    model = genai.GenerativeModel(model_name)
-
-    length_instructions = length_instruction()
-
-    prompt = sumarrys()
-
-    try:
-        response = model.generate_content(prompt)
-        if hasattr(response, "text"):
-            return response.text.strip()
-        else:
-            return "⚠️ No summary generated. Try with a different text."
-    except Exception as e:
-        return f"❌ Error during summarization: {str(e)}"
 
 
 def check_relevance_with_gemini(pdf_text, topic, model_name="models/gemini-2.5-pro"):

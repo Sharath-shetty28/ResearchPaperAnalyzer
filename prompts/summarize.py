@@ -1,7 +1,6 @@
-from xmlrpc import client
 from prompts.length_instruction import length_instruction
 
-def summarize_prompt(text, length):
+def build_summary_prompt(text, length):
     instructions = length_instruction()
 
     summary_prompt = f"""
@@ -39,16 +38,4 @@ CONTENT TO SUMMARIZE:
 """
     return summary_prompt
 
-# def summarize_with_ai(text, length, model, temperature):
-#     prompt = build_summary_prompt(text, length)
 
-#     response = client.chat.completions.create(
-#         model=model,
-#         messages=[
-#             {"role": "system", "content": "You summarize academic documents."},
-#             {"role": "user", "content": prompt}
-#         ],
-#         temperature=temperature
-#     )
-
-#     return response.choices[0].message.content

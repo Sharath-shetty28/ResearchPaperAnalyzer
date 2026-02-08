@@ -1,3 +1,4 @@
+from http import client
 import streamlit as st
 from groq import Groq
 from dotenv import load_dotenv
@@ -6,7 +7,8 @@ import os
 import fitz  
 from utils.sidebar import render_sidebar
 from utils.extract_text import extract_text_from_pdf
-from prompts.summarize import summarize_prompt
+from prompts.ratings import ratings
+from prompts.summarize import build_summary_prompt
 from export_utils import PDFReport
 
 # ===== env setup ==========
@@ -63,43 +65,81 @@ if uploaded_files:
 
             if st.button(f"Summarize", key=f"btn_{file.name}"):
                 with st.spinner("Generating summary with AI..."):
-                    summary = summarize_prompt(text, length=summary_length)
-                    st.session_state["summaries"][file.name] = summary
+                     prompt = build_summary_prompt(text, summary_length)
+
+                     response = client.chat.completions.create(
+                    model=model,
+                    messages=[{"role": "user", "content": prompt}],
+                    temperature=temperature
+
+                    )
+                     summary = response.choices[0].message.content
+                     st.session_state["summaries"][file.name] = summary
 
             # Show summary if it exists
             if file.name in st.session_state["summaries"]:
                 st.markdown(st.session_state["summaries"][file.name])
 
-    # # --- Section 2: Topic Relevance & Tagging ---
-    # with st.expander("🎯 Topic Relevance Scanner & Tagging"):
-    #     topic = st.text_input("📝 Enter a topic to check relevance:")
-    #     if topic:
-    #         st.session_state["topic_query"] = topic
+    # --- Section 2: Topic Relevance & Tagging ---
+with st.expander("🎯 Topic Relevance Scanner & Tagging"):
 
-    #     if "relevance_results" not in st.session_state:
-    #         st.session_state["relevance_results"] = {}
+    topic = st.text_input("📝 Enter a topic to check relevance:")
 
-    #     for file in uploaded_files:
-    #         st.subheader(f"📘 {file.name}")
-    #         with st.spinner("Extracting text..."):
-    #             text = extract_text_from_pdf(file)
+    if topic:
+        st.session_state["topic_query"] = topic.strip()
 
-    #     # Initialize this file's result if not already stored
-    #         if file.name not in st.session_state["relevance_results"]:
-    #             st.session_state["relevance_results"][file.name] = ""
+    if "relevance_results" not in st.session_state:
+        st.session_state["relevance_results"] = {}
 
-    #         if st.button(f"Check Relevance - {file.name}"):
-    #             with st.spinner("Checking relevance..."):
-    #                 relevance = check_relevance_with_gemini(text, topic)
-    #                 st.session_state["relevance_results"][file.name] = relevance
+    if "pdf_text_cache" not in st.session_state:
+        st.session_state["pdf_text_cache"] = {}
 
-    #     # Always display this PDF's relevance result if it exists
-    #         if st.session_state["relevance_results"][file.name]:
-    #             st.text_area(
-    #                 "🎯 Relevance Result",
-    #                 st.session_state["relevance_results"][file.name],
-    #                 height=200, key=f"relevance_{file.name}" 
-    #             )
+    for file in uploaded_files:
+        st.subheader(f"📘 {file.name}")
+
+        # ---- Text Extraction (Cached) ----
+        if file.name not in st.session_state["pdf_text_cache"]:
+            with st.spinner("Extracting text..."):
+                st.session_state["pdf_text_cache"][file.name] = extract_text_from_pdf(file)
+
+        text = st.session_state["pdf_text_cache"][file.name]
+
+        # Initialize result slot
+        if file.name not in st.session_state["relevance_results"]:
+            st.session_state["relevance_results"][file.name] = ""
+
+        # ---- Button ----
+        if st.button(f"Check Relevance", key=f"relevance_btn_{file.name}"):
+
+            if not topic:
+                st.warning("⚠️ Please enter a topic first.")
+            else:
+                with st.spinner("Checking relevance..."):
+
+                    prompt = ratings(text, topic)
+
+                    response = client.chat.completions.create(
+                        model=model,
+                        messages=[
+                            {
+                                "role": "user",
+                                "content": prompt
+                            }
+                        ],
+                        temperature=temperature,
+                    )
+
+                    relevance = response.choices[0].message.content.strip()
+                    st.session_state["relevance_results"][file.name] = relevance
+
+        # ---- Display Result ----
+        if st.session_state["relevance_results"][file.name]:
+            st.text_area(
+                "🎯 Relevance Result",
+                st.session_state["relevance_results"][file.name],
+                height=180,
+                key=f"relevance_output_{file.name}"
+            )
 
     # # --- Section 3: Export Final Report ---
     # with st.expander("📄 Export Final Report", expanded=True):

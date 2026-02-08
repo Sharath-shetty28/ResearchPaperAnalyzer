@@ -1,5 +1,7 @@
 import streamlit as st
 import fitz  
+
+@st.cache_data
 def extract_text_from_pdf(file):
     if "file_cache" not in st.session_state:
         st.session_state["file_cache"] = {}

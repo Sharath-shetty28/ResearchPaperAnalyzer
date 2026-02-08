@@ -1,12 +1,39 @@
 def ratings(pdf_text, topic):
-    ratings = (
-        f"You are acting as a strict academic reviewer.\n"
-        f"Topic of interest: '{topic}'\n\n"
-        f"Rate the relevance of the paper STRICTLY on a scale from 1 (not relevant at all) "
-        f"to 10 (perfectly aligned). Avoid giving high scores unless the paper is highly relevant.\n"
-        f"Give the result in this format ONLY:\n"
-        f"Relevance Score: <score>/10\nReason: <short reason>\n\n"
-        f"Generate 5 to 10 concise, relevant tags for this paper.\n\n"
-        f"Here is the paper content:\n{pdf_text[:6000]}"
-    )
-    return ratings
+    return f"""
+You are a strict academic reviewer evaluating topical relevance.
+
+TOPIC:
+"{topic}"
+
+TASK:
+Assess how relevant the given paper is to the topic above.
+
+RELEVANCE RUBRIC:
+- 1–2: Topic not discussed or only mentioned in passing
+- 3–4: Weak or indirect relevance
+- 5–6: Partial relevance (some sections related)
+- 7–8: Strong relevance (topic is a major focus)
+- 9–10: Core focus of the paper, deeply aligned
+
+STRICT RULES:
+- Base your judgment ONLY on the provided content.
+- Do NOT assume missing information.
+- If relevance is unclear, give a LOWER score.
+- Be conservative with scores above 8.
+
+OUTPUT FORMAT (FOLLOW EXACTLY):
+Relevance Score: <number>/10
+Reason: <1–2 concise sentences>
+
+Tags:
+- <tag1>
+- <tag2>
+- <tag3>
+- <tag4>
+- <tag5>
+
+PAPER CONTENT:
+----------------
+{pdf_text[:6000]}
+----------------
+"""
