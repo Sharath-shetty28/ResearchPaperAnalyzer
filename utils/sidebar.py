@@ -1,3 +1,4 @@
+from xml.parsers.expat import model
 import streamlit as st
 
 def render_sidebar():
@@ -38,5 +39,4 @@ def render_sidebar():
     value=0.3,
     step=0.1
 )
-   
-    return model, temperature 
+    return model, temperature

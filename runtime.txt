@@ -1,1 +1,8 @@
 python-3.12.17
+PDF
+ └─> Text Extraction
+      └─> Chunking
+           └─> Embeddings (PDF Chunks)
+                └─> Topic Embedding
+                     └─> Similarity Search (Top-K)
+                          └─> LLM Judgment + Tags

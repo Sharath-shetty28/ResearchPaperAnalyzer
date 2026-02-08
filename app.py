@@ -1,15 +1,17 @@
-from http import client
 import streamlit as st
 from groq import Groq
 from dotenv import load_dotenv
-from groq import Groq
+
 import os
 import fitz  
 from utils.sidebar import render_sidebar
-from utils.extract_text import extract_text_from_pdf
+from core.extract_text import extract_text_from_pdf
+from core.summarize_pdf import summarize_pdf_detail
 from prompts.ratings import ratings
 from prompts.summarize import build_summary_prompt
 from export_utils import PDFReport
+from ui.relevance_ui import render_relevance_ui
+from ui.upload_ui import render_upload_ui
 
 # ===== env setup ==========
 
@@ -27,10 +29,7 @@ st.set_page_config(
 
 
 # ---------- MENU BAR  ----------
-
-
-model, temperature = render_sidebar()
-
+# model, temperature = render_sidebar()
 
 # 🔧 Common footer/debug
 st.sidebar.divider()
@@ -39,23 +38,33 @@ st.sidebar.write("Model:", model)
 st.sidebar.write("Temp:", temperature)
 
 # ---------- Upload PDFs ----------
-uploaded_files = st.file_uploader("📤 Upload one or more PDF files", type=["pdf"], accept_multiple_files=True,key="uploaded_files" )
+st.subheader("📤 Upload PDF Files")
+uploaded_files = st.file_uploader('',type=["pdf"], accept_multiple_files=True, key="uploaded_files")
 
 # ---------- Main Sections ----------
 if uploaded_files:
 
-    # --- Section 1: Summarize PDFs ---
     if "summaries" not in st.session_state:
         st.session_state["summaries"] = {}
+
+    if "pdf_texts" not in st.session_state:
+        st.session_state["pdf_texts"] = {}
 
     with st.expander("📌 Summarize PDFs", expanded=True):
         for file in uploaded_files:
             st.subheader(f"📘 {file.name}")
 
-            with st.spinner("Extracting text..."):
-                text = extract_text_from_pdf(file)
+            # Extract once and store
+            if file.name not in st.session_state["pdf_texts"]:
+                with st.spinner("Extracting text..."):
+                    st.session_state["pdf_texts"][file.name] = extract_text_from_pdf(file)
 
-        # Summary length selector
+            text = st.session_state["pdf_texts"][file.name]
+
+            if not text.strip():
+                st.warning("No readable text found in this PDF.")
+                continue
+
             summary_length = st.selectbox(
                 f"Choose summary length for {file.name}",
                 ["Short", "Medium", "Detailed"],
@@ -63,83 +72,26 @@ if uploaded_files:
                 key=f"length_{file.name}"
             )
 
-            if st.button(f"Summarize", key=f"btn_{file.name}"):
+            if st.button("Summarize", key=f"btn_{file.name}"):
                 with st.spinner("Generating summary with AI..."):
-                     prompt = build_summary_prompt(text, summary_length)
+                    prompt = build_summary_prompt(text, summary_length)
 
-                     response = client.chat.completions.create(
-                    model=model,
-                    messages=[{"role": "user", "content": prompt}],
-                    temperature=temperature
-
+                    response = client.chat.completions.create(
+                        model=model,
+                        messages=[{"role": "user", "content": prompt}],
+                        temperature=temperature
                     )
-                     summary = response.choices[0].message.content
-                     st.session_state["summaries"][file.name] = summary
 
-            # Show summary if it exists
+                    st.session_state["summaries"][file.name] = (
+                        response.choices[0].message.content
+                    ).strip()
+
             if file.name in st.session_state["summaries"]:
                 st.markdown(st.session_state["summaries"][file.name])
 
     # --- Section 2: Topic Relevance & Tagging ---
-with st.expander("🎯 Topic Relevance Scanner & Tagging"):
-
-    topic = st.text_input("📝 Enter a topic to check relevance:")
-
-    if topic:
-        st.session_state["topic_query"] = topic.strip()
-
-    if "relevance_results" not in st.session_state:
-        st.session_state["relevance_results"] = {}
-
-    if "pdf_text_cache" not in st.session_state:
-        st.session_state["pdf_text_cache"] = {}
-
-    for file in uploaded_files:
-        st.subheader(f"📘 {file.name}")
-
-        # ---- Text Extraction (Cached) ----
-        if file.name not in st.session_state["pdf_text_cache"]:
-            with st.spinner("Extracting text..."):
-                st.session_state["pdf_text_cache"][file.name] = extract_text_from_pdf(file)
-
-        text = st.session_state["pdf_text_cache"][file.name]
-
-        # Initialize result slot
-        if file.name not in st.session_state["relevance_results"]:
-            st.session_state["relevance_results"][file.name] = ""
-
-        # ---- Button ----
-        if st.button(f"Check Relevance", key=f"relevance_btn_{file.name}"):
-
-            if not topic:
-                st.warning("⚠️ Please enter a topic first.")
-            else:
-                with st.spinner("Checking relevance..."):
-
-                    prompt = ratings(text, topic)
-
-                    response = client.chat.completions.create(
-                        model=model,
-                        messages=[
-                            {
-                                "role": "user",
-                                "content": prompt
-                            }
-                        ],
-                        temperature=temperature,
-                    )
-
-                    relevance = response.choices[0].message.content.strip()
-                    st.session_state["relevance_results"][file.name] = relevance
-
-        # ---- Display Result ----
-        if st.session_state["relevance_results"][file.name]:
-            st.text_area(
-                "🎯 Relevance Result",
-                st.session_state["relevance_results"][file.name],
-                height=180,
-                key=f"relevance_output_{file.name}"
-            )
+    # uploaded_file = render_upload_ui(uploaded_files)
+    # render_relevance_ui(uploaded_file)
 
     # # --- Section 3: Export Final Report ---
     # with st.expander("📄 Export Final Report", expanded=True):
