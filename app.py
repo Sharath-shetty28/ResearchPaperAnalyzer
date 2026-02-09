@@ -9,6 +9,7 @@ from core.extract_text import extract_text_from_pdf
 from prompts.summarize import build_summary_prompt
 from core.chunk_text import chunk_text,filter_chunks
 from prompts.ratings import ratings
+from prompts.refine_method import build_initial_summary_prompt,build_refine_summary_prompt
 # from openai import OpenAI
 
 # ===== env setup ==========
@@ -85,18 +86,26 @@ if uploaded_files:
             )
 
             if st.button("Summarize", key=f"btn_{file.name}"):
-                with st.spinner("Generating summary with AI..."):
-                    prompt = build_summary_prompt(text, summary_length)
+                with st.spinner("Generating refined summary with AI..."):
 
-                    response = client.chat.completions.create(
-                        model=model,
-                        messages=[{"role": "user", "content": prompt}],
-                        temperature=temperature
-                    )
+                     chunks = chunk_text(text)[:8]
+                     summary = ""
 
-                    st.session_state["summaries"][file.name] = (
-                        response.choices[0].message.content
-                    ).strip()
+                     for i, chunk in enumerate(chunks):
+                        if i == 0:
+                            prompt = build_initial_summary_prompt(chunk, summary_length)
+                        else:
+                            prompt = build_refine_summary_prompt(summary, chunk, summary_length)
+
+                        response = client.chat.completions.create(
+                            model=model,
+                            messages=[{"role": "user", "content": prompt}],
+                            temperature=temperature
+                        )
+
+                        summary = response.choices[0].message.content.strip()
+
+                        st.session_state["summaries"][file.name] = summary
 
             if file.name in st.session_state["summaries"]:
                 st.markdown(st.session_state["summaries"][file.name])
