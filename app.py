@@ -11,8 +11,13 @@ from prompts.ratings import ratings
 # ===== env setup ==========
 
 load_dotenv()
-client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+api_key = st.secrets.get("GROQ_API_KEY") or os.getenv("GROQ_API_KEY")
 
+if not api_key:
+    st.error("GROQ_API_KEY not found. Please set it in Streamlit Secrets.")
+    st.stop()
+
+client = Groq(api_key=api_key)
 
 # ---------- Streamlit UI ----------
 st.set_page_config(
@@ -31,7 +36,6 @@ st.sidebar.divider()
 st.sidebar.write("### Current Config:")
 st.sidebar.write("Model:", model)
 st.sidebar.write("Temp:", temperature)
-# model_details(model,temperature)
 
 # ---------- Upload PDFs ----------
 st.subheader("📤 Upload PDF Files")
