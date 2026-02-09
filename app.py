@@ -1,4 +1,3 @@
-from core.chunk_text import filter_chunks
 import streamlit as st
 from groq import Groq
 from dotenv import load_dotenv
