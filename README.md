@@ -43,6 +43,8 @@ It allows you to upload one or more PDFs, generate **structured summaries**, eva
 
 ## 📁 Project Structure
 
+```bash
+
 ResearchPaperAnalyzer/
 ├─ .devcontainer/
 │ └─ devcontainer.json
@@ -91,6 +93,8 @@ ResearchPaperAnalyzer/
 ├─ app.py
 ├─ README.md
 └─ requirements.txt
+
+```
 
 ## 🛠️ Tech Stack
 
