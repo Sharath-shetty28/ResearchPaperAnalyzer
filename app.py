@@ -6,7 +6,6 @@ from config.export_utils import PDFReport
 import os
 from ui.sidebar import render_sidebar
 from core.extract_text import extract_text_from_pdf
-from prompts.summarize import build_summary_prompt
 from core.chunk_text import chunk_text,filter_chunks
 from prompts.ratings import ratings
 from prompts.refine_method import build_initial_summary_prompt,build_refine_summary_prompt
