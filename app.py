@@ -1,17 +1,12 @@
 import streamlit as st
 from groq import Groq
 from dotenv import load_dotenv
-
+from config.export_utils import PDFReport
 import os
 import fitz  
-from utils.sidebar import render_sidebar
+from ui.sidebar import render_sidebar
 from core.extract_text import extract_text_from_pdf
-from core.summarize_pdf import summarize_pdf_detail
-from prompts.ratings import ratings
 from prompts.summarize import build_summary_prompt
-from export_utils import PDFReport
-from ui.relevance_ui import render_relevance_ui
-from ui.upload_ui import render_upload_ui
 
 # ===== env setup ==========
 
@@ -29,13 +24,14 @@ st.set_page_config(
 
 
 # ---------- MENU BAR  ----------
-# model, temperature = render_sidebar()
+model, temperature = render_sidebar()
 
 # 🔧 Common footer/debug
 st.sidebar.divider()
 st.sidebar.write("### Current Config:")
 st.sidebar.write("Model:", model)
 st.sidebar.write("Temp:", temperature)
+# model_details(model,temperature)
 
 # ---------- Upload PDFs ----------
 st.subheader("📤 Upload PDF Files")
@@ -90,40 +86,38 @@ if uploaded_files:
                 st.markdown(st.session_state["summaries"][file.name])
 
     # --- Section 2: Topic Relevance & Tagging ---
-    # uploaded_file = render_upload_ui(uploaded_files)
-    # render_relevance_ui(uploaded_file)
 
     # # --- Section 3: Export Final Report ---
-    # with st.expander("📄 Export Final Report", expanded=True):
+    with st.expander("📄 Export Final Report", expanded=True):
 
-    # # make sure we have one report object in session state
-    #     if "report" not in st.session_state:
-    #         st.session_state.report = PDFReport()
+    # make sure we have one report object in session state
+        if "report" not in st.session_state:
+            st.session_state.report = PDFReport()
 
-    #     if st.button("📥 Generate PDF Report"):
-    #         with st.spinner("Compiling report..."):
-    #             # reset first so we don't append old content
-    #             st.session_state.report.clear()
+        if st.button("📥 Generate PDF Report"):
+            with st.spinner("Compiling report..."):
+                # reset first so we don't append old content
+                st.session_state.report.clear()
 
-    #             # Add summaries
-    #             for fname, summary in st.session_state["summaries"].items():
-    #                 relevance = st.session_state["relevance_results"].get(fname, "")
-    #                 st.session_state.report.add_pdf_summary(fname, summary, relevance=relevance)
+                # Add summaries
+                for fname, summary in st.session_state["summaries"].items():
+                    relevance = st.session_state["relevance_results"].get(fname, "")
+                    st.session_state.report.add_pdf_summary(fname, summary, relevance=relevance)
 
-    #             file_path = st.session_state.report.save("Final_Report.pdf")
-    #             with open(file_path, "rb") as f:
-    #                 st.download_button(
-    #                     "⬇️ Download Final Report",
-    #                     f,
-    #                     "Final_Report.pdf",
-    #                     "application/pdf"
-    #                 )
+                file_path = st.session_state.report.save("Final_Report.pdf")
+                with open(file_path, "rb") as f:
+                    st.download_button(
+                        "⬇️ Download Final Report",
+                        f,
+                        "Final_Report.pdf",
+                        "application/pdf"
+                    )
 
-    # if st.button("🗑️ Clear All"):
-    #     st.session_state["summaries"] = {}
-    #     st.session_state["relevance_results"] = {}
-    #     st.success("All files and results cleared!")
-    #     st.rerun()    
+    if st.button("🗑️ Clear All"):
+        st.session_state["summaries"] = {}
+        st.session_state["relevance_results"] = {}
+        st.success("All files and results cleared!")
+        st.rerun()    
 
 
             
