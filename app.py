@@ -147,8 +147,8 @@ if uploaded_files:
 
                 # Add summaries
                 for fname, summary in st.session_state["summaries"].items():
-                    # relevance = st.session_state["relevance_results"].get(fname, "")
-                    st.session_state.report.add_pdf_summary(fname, summary)
+                    relevance = st.session_state["relevance_results"].get(fname, "")
+                    st.session_state.report.add_pdf_summary(fname, summary, relevance)
 
                 file_path = st.session_state.report.save("Final_Report.pdf")
                 with open(file_path, "rb") as f:
