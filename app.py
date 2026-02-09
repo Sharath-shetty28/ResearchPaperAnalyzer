@@ -7,6 +7,7 @@ from ui.sidebar import render_sidebar
 from core.extract_text import extract_text_from_pdf
 from prompts.summarize import build_summary_prompt
 from prompts.ratings import ratings
+from openai import OpenAI
 
 # ===== env setup ==========
 
@@ -20,11 +21,10 @@ if not api_key:
     st.error("GROQ_API_KEY not found. Please set it in Streamlit Secrets.")
     st.stop()
 
-# ✅ THIS is the important part
-os.environ["GROQ_API_KEY"] = api_key
-
-# ✅ Create client WITHOUT args
-client = Groq()
+client = OpenAI(
+    api_key=api_key,
+    base_url="https://api.groq.com/openai/v1"
+)
 
 # ---------- Streamlit UI ----------
 st.set_page_config(
