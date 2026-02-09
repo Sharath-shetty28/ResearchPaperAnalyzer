@@ -3,10 +3,10 @@ from groq import Groq
 from dotenv import load_dotenv
 from config.export_utils import PDFReport
 import os
-import fitz  
 from ui.sidebar import render_sidebar
 from core.extract_text import extract_text_from_pdf
 from prompts.summarize import build_summary_prompt
+from prompts.ratings import ratings
 
 # ===== env setup ==========
 
@@ -86,6 +86,41 @@ if uploaded_files:
                 st.markdown(st.session_state["summaries"][file.name])
 
     # --- Section 2: Topic Relevance & Tagging ---
+    with st.expander("🎯 Topic Relevance Scanner & Tagging"):
+        topic = st.text_input("📝 Enter a topic to check relevance:")
+        if topic:
+            st.session_state["topic_query"] = topic
+
+        if "relevance_results" not in st.session_state:
+            st.session_state["relevance_results"] = {}
+
+        for file in uploaded_files:
+            st.subheader(f"📘 {file.name}")
+            with st.spinner("Extracting text..."):
+                text = extract_text_from_pdf(file)
+
+        # Initialize this file's result if not already stored
+            if file.name not in st.session_state["relevance_results"]:
+                st.session_state["relevance_results"][file.name] = ""
+
+            if st.button("Check Relevance"):
+                with st.spinner("Checking relevance..."):
+                    prompt2 = ratings(text, topic)
+                    response = client.chat.completions.create(
+                        model=model,
+                        messages=[{"role": "user", "content": prompt2}],
+                        temperature=temperature
+                    )
+                    st.session_state["relevance_results"][file.name] = response.choices[0].message.content.strip()
+
+        # Always display this PDF's relevance result if it exists
+            if st.session_state["relevance_results"][file.name]:
+                st.text_area(
+                    "🎯 Relevance Result",
+                    st.session_state["relevance_results"][file.name],
+                    height=200, key=f"relevance_{file.name}" 
+                )
+
 
     # # --- Section 3: Export Final Report ---
     with st.expander("📄 Export Final Report", expanded=True):
@@ -101,8 +136,8 @@ if uploaded_files:
 
                 # Add summaries
                 for fname, summary in st.session_state["summaries"].items():
-                    relevance = st.session_state["relevance_results"].get(fname, "")
-                    st.session_state.report.add_pdf_summary(fname, summary, relevance=relevance)
+                    # relevance = st.session_state["relevance_results"].get(fname, "")
+                    st.session_state.report.add_pdf_summary(fname, summary)
 
                 file_path = st.session_state.report.save("Final_Report.pdf")
                 with open(file_path, "rb") as f:
