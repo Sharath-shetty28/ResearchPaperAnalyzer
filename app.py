@@ -44,6 +44,8 @@ st.sidebar.write("### Current Config:")
 st.sidebar.write("Model:", model)
 st.sidebar.write("Temp:", temperature)
 
+st.write("ResearchPaperAnalyzer is a tool designed to help you analyze and summarize research papers efficiently. Upload your PDFs and let the AI assist you!")
+
 # ---------- Upload PDFs ----------
 st.subheader("📤 Upload PDF Files")
 uploaded_files = st.file_uploader('',type=["pdf"], accept_multiple_files=True, key="uploaded_files")
