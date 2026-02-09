@@ -11,13 +11,20 @@ from prompts.ratings import ratings
 # ===== env setup ==========
 
 load_dotenv()
+
+
+# Get key from Streamlit Secrets (cloud) or env (local)
 api_key = st.secrets.get("GROQ_API_KEY") or os.getenv("GROQ_API_KEY")
 
 if not api_key:
     st.error("GROQ_API_KEY not found. Please set it in Streamlit Secrets.")
     st.stop()
 
-client = Groq(api_key=api_key)
+# ✅ THIS is the important part
+os.environ["GROQ_API_KEY"] = api_key
+
+# ✅ Create client WITHOUT args
+client = Groq()
 
 # ---------- Streamlit UI ----------
 st.set_page_config(
