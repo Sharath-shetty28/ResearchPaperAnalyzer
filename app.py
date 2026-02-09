@@ -1,3 +1,4 @@
+from core.chunk_text import filter_chunks
 import streamlit as st
 from groq import Groq
 from dotenv import load_dotenv
@@ -6,25 +7,26 @@ import os
 from ui.sidebar import render_sidebar
 from core.extract_text import extract_text_from_pdf
 from prompts.summarize import build_summary_prompt
+from core.chunk_text import chunk_text,filter_chunks
 from prompts.ratings import ratings
-from openai import OpenAI
+# from openai import OpenAI
 
 # ===== env setup ==========
 
 load_dotenv()
-
+client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 # Get key from Streamlit Secrets (cloud) or env (local)
-api_key = st.secrets.get("GROQ_API_KEY") or os.getenv("GROQ_API_KEY")
+# api_key = st.secrets.get("GROQ_API_KEY") or os.getenv("GROQ_API_KEY")
 
-if not api_key:
-    st.error("GROQ_API_KEY not found. Please set it in Streamlit Secrets.")
-    st.stop()
+# if not api_key:
+#     st.error("GROQ_API_KEY not found. Please set it in Streamlit Secrets.")
+#     st.stop()
 
-client = OpenAI(
-    api_key=api_key,
-    base_url="https://api.groq.com/openai/v1"
-)
+# client = OpenAI(
+#     api_key=api_key,
+#     base_url="https://api.groq.com/openai/v1"
+# )
 
 # ---------- Streamlit UI ----------
 st.set_page_config(
@@ -117,9 +119,13 @@ if uploaded_files:
             if file.name not in st.session_state["relevance_results"]:
                 st.session_state["relevance_results"][file.name] = ""
 
-            if st.button("Check Relevance"):
+            if st.button("Check Relevance") and file.name not in st.session_state["relevance_results"]:
                 with st.spinner("Checking relevance..."):
-                    prompt2 = ratings(text, topic)
+                    chunks = chunk_text(text)
+                    relevant_chunks = filter_chunks(chunks, topic)
+                    context = "\n\n---\n\n".join(relevant_chunks)
+                    prompt2 = ratings(context, topic)
+
                     response = client.chat.completions.create(
                         model=model,
                         messages=[{"role": "user", "content": prompt2}],
